@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Godamwale Logistics — Warehouse Rent Calculator</title>
+  <meta name="color-scheme" content="light dark" />
+  <style>
+    :root{
+      --bg: #0f172a;            /* slate-900 */
+      --bg2:#111827;            /* gray-900 */
+      --card:#0b1022;           /* deep card */
+      --ink:#e5e7eb;            /* gray-200 */
+      --muted:#9aa4b2;          /* slate-400 */
+      --brand:#22d3ee;          /* cyan-400 */
+      --accent:#60a5fa;         /* blue-400 */
+      --good:#22c55e;           /* green-500 */
+      --border: rgba(255,255,255,.08);
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 16px;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%}
+    body{
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(1200px 600px at 10% -10%, #0ea5e9 0%, rgba(14,165,233,0) 40%),
+        radial-gradient(1000px 600px at 120% 20%, #9333ea 0%, rgba(147,51,234,0) 45%),
+        linear-gradient(180deg, var(--bg), var(--bg2));
+      min-height:100vh;
+      padding: 24px;
+    }
+
+    .shell{max-width: 1100px; margin: 0 auto;}
+    .brand{
+      display:flex; align-items:center; gap:12px;
+      background: linear-gradient(135deg, rgba(34,211,238,.12), rgba(96,165,250,.12));
+      border:1px solid var(--border); padding:14px 16px; border-radius: 14px;
+      backdrop-filter: blur(6px);
+    }
+    .logo{
+      width:38px; height:38px; border-radius:10px;
+      display:grid; place-items:center;
+      background: linear-gradient(135deg, var(--brand), var(--accent));
+      color:#001018; font-weight:900; box-shadow: var(--shadow);
+    }
+    .brand h1{font-size:18px; letter-spacing:.3px}
+    .brand .tag{color:var(--muted); font-size:13px}
+
+    .hero{
+      margin-top:18px; border:1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 26px 24px;
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      box-shadow: var(--shadow);
+    }
+    .hero h2{font-size:26px; letter-spacing:-.02em; font-weight:800}
+    .hero p{color:var(--muted); margin-top:6px}
+
+    .grid{display:grid; gap:14px}
+    @media (min-width: 900px){ .grid.cols-5{ grid-template-columns: repeat(5,1fr);} .grid.cols-3{ grid-template-columns: repeat(3,1fr);} }
+
+    .card{
+      background: rgba(255,255,255,.04);
+      border:1px solid var(--border);
+      border-radius: 14px; padding:14px 14px 16px;
+    }
+    label{display:block; font-size:12px; color:var(--muted); margin-bottom:8px; letter-spacing:.3px}
+    .input,.select{
+      width:100%; background:#0b1120; color:var(--ink);
+      border:1px solid var(--border); border-radius:10px; padding:10px 12px; font-size:14px;
+      outline:none; transition:.2s border, .2s box-shadow;
+    }
+    .input:focus,.select:focus{ border-color: var(--brand); box-shadow: 0 0 0 3px rgba(34,211,238,.18) }
+
+    .pill{
+      display:inline-block; padding:6px 10px; border-radius:999px;
+      background: rgba(34,211,238,.12); border:1px solid var(--border);
+      font-size:12px; color:#bfefff; margin-top:8px;
+    }
+    .muted{color:var(--muted); font-size:12px; margin-top:6px}
+
+    .cta{
+      width:100%; margin:16px 0 8px;
+      border:0; color:#001018; font-weight:800; letter-spacing:.2px;
+      background: linear-gradient(135deg, var(--brand), var(--accent));
+      padding:14px 18px; border-radius:12px; cursor:pointer;
+      box-shadow: 0 10px 24px rgba(34,211,238,.25);
+      transition: transform .08s ease;
+    }
+    .cta:hover{ transform: translateY(-1px) }
+
+    .results{
+      margin-top:16px; display:none;
+      border:1px solid var(--border); border-radius: var(--radius);
+      background: rgba(255,255,255,.04); padding:18px;
+      animation: fade .35s ease;
+    }
+    .results.show{ display:block }
+    @keyframes fade{ from{opacity:0; transform: translateY(4px)} to{opacity:1; transform:none} }
+
+    .kpi{ background: #0b1120; border:1px solid var(--border); border-radius:14px; padding:16px }
+    .kpi .title{ color:var(--muted); font-size:12px; letter-spacing:.3px }
+    .kpi .value{ font-size:22px; font-weight:900; margin-top:6px }
+    .kpi small{ color:var(--muted) }
+
+    .total{
+      background: linear-gradient(135deg, rgba(34,197,94,.25), rgba(34,197,94,.08));
+      border: 1px solid rgba(34,197,94,.35);
+      border-radius: 16px; padding:18px; text-align:center;
+    }
+    .total h4{ font-size:14px; color:#dcfce7; opacity:.9 }
+    .total .amount{ font-size:34px; font-weight:1000; color:#eafff2; margin-top:6px }
+
+    .tableWrap{ margin-top:14px; overflow:auto; border:1px solid var(--border); border-radius: 12px }
+    table{ width:100%; border-collapse: collapse; font-size:14px; min-width:660px; background:#0b1120 }
+    thead th{ text-align:left; padding:12px; color:#b9c1cc; background: rgba(255,255,255,.04); border-bottom:1px solid var(--border) }
+    tbody td{ padding:12px; border-top:1px solid var(--border) }
+    tbody tr:hover{ background: rgba(255,255,255,.03) }
+
+    .row{
+      display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-top:8px;
+    }
+    .badge{
+      font-size:12px; color:#8abfff; background: rgba(96,165,250,.12);
+      padding:6px 10px; border-radius:999px; border:1px solid var(--border);
+    }
+
+    /* Mobile tweaks */
+    @media (max-width: 899px){
+      .hero h2{ font-size:22px }
+      .total .amount{ font-size:28px }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <!-- Brand -->
+    <div class="brand">
+      <div class="logo">G</div>
+      <div>
+        <h1>Godamwale Logistics</h1>
+        <div class="tag">Warehouse Rent Calculator</div>
+      </div>
+    </div>
+
+    <!-- Hero -->
+    <section class="hero">
+      <h2>Estimate storage & handling costs in seconds</h2>
+      <p>Pick a city, enter pallets and duration. We’ll compute monthly storage, one-time handling, and the overall payable for the period.</p>
+      <div class="row">
+        <span class="badge">Live city rate card</span>
+        <span class="badge">Instant INR formatting</span>
+        <span class="badge">Mobile friendly</span>
+      </div>
+    </section>
+
+    <!-- Calculator -->
+    <section style="margin-top:16px" class="grid cols-5">
+      <!-- City -->
+      <div class="card">
+        <label for="city">Select City</label>
+        <select id="city" class="select" onchange="updateRates()">
+          <option value="">Choose a city…</option>
+          <option value="mumbai">Mumbai</option>
+          <option value="delhi">Delhi NCR</option>
+          <option value="bengaluru">Bengaluru</option>
+          <option value="chennai">Chennai</option>
+          <option value="hyderabad">Hyderabad</option>
+          <option value="kolkata">Kolkata</option>
+          <option value="pune">Pune</option>
+        </select>
+        <div id="cityPill" class="pill" style="display:none"></div>
+      </div>
+
+      <!-- Rate -->
+      <div class="card">
+        <label for="rate">Rate (₹/sqft/month)</label>
+        <input id="rate" class="input" type="number" placeholder="Select city first" readonly />
+        <div class="muted">Reference only (space-based rent).</div>
+      </div>
+
+      <!-- Handling -->
+      <div class="card">
+        <label for="handling">Handling per Pallet (₹ one-time)</label>
+        <input id="handling" class="input" type="number" placeholder="Select city first" readonly />
+      </div>
+
+      <!-- Storage -->
+      <div class="card">
+        <label for="storage">Storage per Pallet (₹/month)</label>
+        <input id="storage" class="input" type="number" placeholder="Select city first" readonly />
+      </div>
+
+      <!-- Pallets -->
+      <div class="card">
+        <label for="pallets">Number of Pallets</label>
+        <input id="pallets" class="input" type="number" min="0" placeholder="e.g., 100" />
+      </div>
+    </section>
+
+    <!-- Secondary inputs -->
+    <section style="margin-top:14px" class="grid cols-5">
+      <div class="card">
+        <label for="duration">Duration (months)</label>
+        <input id="duration" class="input" type="number" min="1" value="12" />
+      </div>
+    </section>
+
+    <!-- Results -->
+    <section id="results" class="results">
+      <div class="grid cols-3">
+        <div class="kpi">
+          <div class="title">Storage Cost (Monthly)</div>
+          <div id="monthlyStorageCost" class="value">₹0</div>
+          <small id="monthlyBreakdown">—</small>
+        </div>
+        <div class="kpi">
+          <div class="title">Storage Cost (Total)</div>
+          <div id="totalStorageCost" class="value">₹0</div>
+          <small id="totalBreakdown">—</small>
+        </div>
+        <div class="kpi">
+          <div class="title">Handling Cost (One-time)</div>
+          <div id="handlingCost" class="value">₹0</div>
+          <small id="handlingBreakdown">—</small>
+        </div>
+      </div>
+
+      <div class="total" style="margin-top:34px">
+        <h4>Total for <span id="totalPallets"></span> pallets × <span id="totalDuration"></span> months</h4>
+        <div id="totalAmount" class="amount">₹0</div>
+      </div>
+    </section>
+
+    <!-- Rate Card -->
+    <section style="margin-top:16px">
+      <div class="tableWrap">
+        <table>
+          <thead>
+            <tr>
+              <th>City</th>
+              <th>Rate (₹/sqft/mo)</th>
+              <th>Storage / Pallet (₹/mo)</th>
+              <th>Handling / Pallet (₹)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Mumbai</td><td>28</td><td>840</td><td>350</td></tr>
+            <tr><td>Delhi NCR</td><td>26</td><td>780</td><td>300</td></tr>
+            <tr><td>Bengaluru</td><td>22</td><td>660</td><td>250</td></tr>
+            <tr><td>Chennai</td><td>22</td><td>660</td><td>250</td></tr>
+            <tr><td>Hyderabad</td><td>20</td><td>600</td><td>200</td></tr>
+            <tr><td>Kolkata</td><td>18</td><td>540</td><td>180</td></tr>
+            <tr><td>Pune</td><td>31</td><td>930</td><td>320</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const warehouseRates = {
+      mumbai:   { city: 'Mumbai',      rate: 28, storage: 840, handling: 350 },
+      delhi:    { city: 'Delhi NCR',   rate: 26, storage: 780, handling: 300 },
+      bengaluru:{ city: 'Bengaluru',   rate: 22, storage: 660, handling: 250 },
+      chennai:  { city: 'Chennai',     rate: 22, storage: 660, handling: 250 },
+      hyderabad:{ city: 'Hyderabad',   rate: 20, storage: 600, handling: 200 },
+      kolkata:  { city: 'Kolkata',     rate: 18, storage: 540, handling: 180 },
+      pune:     { city: 'Pune',        rate: 31, storage: 930, handling: 320 }
+    };
+
+    const fmt = (n)=> new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',minimumFractionDigits:0}).format(n);
+
+    function updateRates(){
+      const sel = document.getElementById('city').value;
+      const rate = document.getElementById('rate');
+      const handling = document.getElementById('handling');
+      const storage = document.getElementById('storage');
+      const pill = document.getElementById('cityPill');
+
+      if (sel && warehouseRates[sel]){
+        const r = warehouseRates[sel];
+        rate.value = r.rate;
+        handling.value = r.handling;
+        storage.value = r.storage;
+
+        pill.style.display = 'inline-block';
+        pill.textContent = r.city + ' • ₹' + r.storage + '/pallet/mo, ₹' + r.handling + '/pallet (one-time)';
+
+        calculateCost();
+      } else {
+        rate.value = handling.value = storage.value = '';
+        pill.style.display = 'none';
+        document.getElementById('results').classList.remove('show');
+      }
+    }
+
+    function calculateCost(){
+      const sel = document.getElementById('city').value;
+      const pallets = +document.getElementById('pallets').value || 0;
+      const months = +document.getElementById('duration').value || 1;
+
+      if (!sel || pallets <= 0){ document.getElementById('results').classList.remove('show'); return; }
+
+      const r = warehouseRates[sel];
+      const monthlyStorage = pallets * r.storage;
+      const totalStorage   = monthlyStorage * months;
+      const handlingCost   = pallets * r.handling;
+      const total          = totalStorage + handlingCost;
+
+      // Update UI
+      document.getElementById('monthlyStorageCost').textContent = fmt(monthlyStorage);
+      document.getElementById('totalStorageCost').textContent   = fmt(totalStorage);
+      document.getElementById('handlingCost').textContent       = fmt(handlingCost);
+      document.getElementById('totalPallets').textContent       = pallets;
+      document.getElementById('totalDuration').textContent      = months;
+      document.getElementById('totalAmount').textContent        = fmt(total);
+
+      document.getElementById('monthlyBreakdown').textContent = `${pallets} × ₹${r.storage}/pallet/mo`;
+      document.getElementById('totalBreakdown').textContent   = `${fmt(monthlyStorage)} × ${months} months`;
+      document.getElementById('handlingBreakdown').textContent= `${pallets} × ₹${r.handling}/pallet`;
+
+      document.getElementById('results').classList.add('show');
+    }
+
+    // Live recalc
+    document.addEventListener('input', (e)=>{
+      if (['pallets','duration'].includes(e.target.id)) calculateCost();
+    });
+    document.addEventListener('keydown', (e)=>{ if (e.key==='Enter') calculateCost(); });
+  </script>
+</body>
+</html>
