@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Godamwale Logistics — Warehouse Rent Calculator</title>
+  <title>Godamwale Logistics — Warehouse Rent C alculator</title>
   <meta name="color-scheme" content="light dark" />
   <style>
     :root{
@@ -148,7 +148,7 @@
     <!-- Hero -->
     <section class="hero">
       <h2>Estimate storage & handling costs in seconds</h2>
-      <p>Pick a city, enter pallets and duration. We’ll compute monthly storage, one-time handling, and the overall payable for the period.</p>
+      <p>Pick a city, enter area (sq ft) or pallets and duration. We'll compute monthly storage, one-time handling (for pallets), and the overall payable for the period.</p>
       <div class="row">
         <span class="badge">Live city rate card</span>
         <span class="badge">Instant INR formatting</span>
@@ -202,6 +202,13 @@
 
     <!-- Secondary inputs -->
     <section style="margin-top:14px" class="grid cols-5">
+      <div class="card">
+        <label for="area">Area (sq ft)</label>
+        <input id="area" class="input" type="number" min="0" placeholder="e.g., 1000" />
+        <input id="areaSlider" type="range" min="100" max="10000" step="100" value="1000" style="width: 100%; margin-top: 8px;" />
+        <div class="muted">Drag slider or type value</div>
+      </div>
+      
       <div class="card">
         <label for="duration">Duration (months)</label>
         <input id="duration" class="input" type="number" min="1" value="12" />
@@ -301,35 +308,69 @@
       const sel = document.getElementById('city').value;
       const pallets = +document.getElementById('pallets').value || 0;
       const months = +document.getElementById('duration').value || 1;
+      const area = +document.getElementById('area').value || 0;
 
-      if (!sel || pallets <= 0){ document.getElementById('results').classList.remove('show'); return; }
+      if (!sel || (pallets <= 0 && area <= 0)){ document.getElementById('results').classList.remove('show'); return; }
 
       const r = warehouseRates[sel];
-      const monthlyStorage = pallets * r.storage;
-      const totalStorage   = monthlyStorage * months;
-      const handlingCost   = pallets * r.handling;
-      const total          = totalStorage + handlingCost;
+      
+      // Calculate costs based on area if provided, otherwise use pallets
+      let monthlyStorage, totalStorage, handlingCost, total;
+      
+      if (area > 0) {
+        // Area-based calculation
+        monthlyStorage = area * r.rate;
+        totalStorage = monthlyStorage * months;
+        handlingCost = 0; // No handling cost for area-based storage
+        total = totalStorage;
+      } else {
+        // Pallet-based calculation (existing logic)
+        monthlyStorage = pallets * r.storage;
+        totalStorage = monthlyStorage * months;
+        handlingCost = pallets * r.handling;
+        total = totalStorage + handlingCost;
+      }
 
       // Update UI
       document.getElementById('monthlyStorageCost').textContent = fmt(monthlyStorage);
       document.getElementById('totalStorageCost').textContent   = fmt(totalStorage);
       document.getElementById('handlingCost').textContent       = fmt(handlingCost);
-      document.getElementById('totalPallets').textContent       = pallets;
+      document.getElementById('totalPallets').textContent       = area > 0 ? `${area} sq ft` : pallets;
       document.getElementById('totalDuration').textContent      = months;
       document.getElementById('totalAmount').textContent        = fmt(total);
 
-      document.getElementById('monthlyBreakdown').textContent = `${pallets} × ₹${r.storage}/pallet/mo`;
-      document.getElementById('totalBreakdown').textContent   = `${fmt(monthlyStorage)} × ${months} months`;
-      document.getElementById('handlingBreakdown').textContent= `${pallets} × ₹${r.handling}/pallet`;
+      if (area > 0) {
+        document.getElementById('monthlyBreakdown').textContent = `${area} sq ft × ₹${r.rate}/sqft/mo`;
+        document.getElementById('totalBreakdown').textContent   = `${fmt(monthlyStorage)} × ${months} months`;
+        document.getElementById('handlingBreakdown').textContent= `—`;
+      } else {
+        document.getElementById('monthlyBreakdown').textContent = `${pallets} × ₹${r.storage}/pallet/mo`;
+        document.getElementById('totalBreakdown').textContent   = `${fmt(monthlyStorage)} × ${months} months`;
+        document.getElementById('handlingBreakdown').textContent= `${pallets} × ₹${r.handling}/pallet`;
+      }
 
       document.getElementById('results').classList.add('show');
     }
 
     // Live recalc
     document.addEventListener('input', (e)=>{
-      if (['pallets','duration'].includes(e.target.id)) calculateCost();
+      if (['pallets','duration','area'].includes(e.target.id)) calculateCost();
     });
-    document.addEventListener('keydown', (e)=>{ if (e.key==='Enter') calculateCost(); });
+    
+    // Sync area input with slider
+    document.getElementById('areaSlider').addEventListener('input', (e) => {
+      document.getElementById('area').value = e.target.value;
+      calculateCost();
+    });
+    
+    // Sync area input with slider when typing
+    document.getElementById('area').addEventListener('input', (e) => {
+      const value = +e.target.value || 0;
+      if (value >= 100 && value <= 10000) {
+        document.getElementById('areaSlider').value = value;
+      }
+      calculateCost();
+    });
   </script>
 </body>
 </html>
